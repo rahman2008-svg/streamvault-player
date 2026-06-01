@@ -21,13 +21,15 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  /* =========================
+     🔐 SIGNING (FULLY SAFE)
+  ========================= */
   signingConfigs {
 
-    // 🔥 RELEASE SAFE (CI/CD FRIENDLY)
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
+      val keystorePath = System.getenv("KEYSTORE_PATH")
 
-      if (keystorePath.isNotEmpty() && file(keystorePath).exists()) {
+      if (!keystorePath.isNullOrEmpty() && file(keystorePath).exists()) {
         storeFile = file(keystorePath)
         storePassword = System.getenv("STORE_PASSWORD")
         keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
@@ -35,23 +37,17 @@ android {
       }
     }
 
-    // 🔥 DEBUG SAFE (NO CRASH ANYWHERE)
+    // ❗ IMPORTANT: NO HARDCODED DEBUG STORE FILE
     create("debugConfig") {
-      val debugKeystore = file("${rootDir}/debug.keystore")
-
-      if (debugKeystore.exists()) {
-        storeFile = debugKeystore
-        storePassword = "android"
-        keyAlias = "androiddebugkey"
-        keyPassword = "android"
-      }
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
     }
   }
 
   buildTypes {
 
     debug {
-      // ✔ SAFE: No forced signing crash
       isMinifyEnabled = false
       isCrunchPngs = false
     }
@@ -65,9 +61,10 @@ android {
         "proguard-rules.pro"
       )
 
-      // ✔ SAFE SIGNING ONLY IF AVAILABLE
-      if (signingConfigs.findByName("release") != null) {
-        signingConfig = signingConfigs.getByName("release")
+      // SAFE SIGNING ONLY IF VALID
+      val releaseConfig = signingConfigs.findByName("release")
+      if (releaseConfig != null && releaseConfig.storeFile != null) {
+        signingConfig = releaseConfig
       }
     }
   }
@@ -98,9 +95,10 @@ secrets {
 }
 
 /* =========================
-   📦 DEPENDENCIES (UNCHANGED)
+   📦 DEPENDENCIES
 ========================= */
 dependencies {
+
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
 

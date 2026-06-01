@@ -1,0 +1,40 @@
+# Codemagic CI/CD Build Configuration for StreamVault Player v1.0.0
+# Automatic Gradle Release Compilation
+
+workflows:
+  android-workflow:
+    name: Android Apps Build Pipeline
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      java: 17
+      android_ndk: 25.2.9519653
+      vars:
+        PACKAGE_NAME: "com.aistudio.streamvault.player.kvprqx"
+    triggering:
+      events:
+        - push
+        - tag
+      branch_patterns:
+        - pattern: '*'
+          include: true
+    scripts:
+      - name: Set up local environments properties
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+      - name: Validate Gradle tasks wrapper
+        script: |
+          gradle tasks
+      - name: Build Android Release APK and Bundle AAB
+        script: |
+          gradle assembleRelease
+    artifacts:
+      - app/build/outputs/apk/**/*.apk
+      - app/build/outputs/bundle/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - princearabdurrahman57@gmail.com
+        notify:
+          success: true
+          failure: true

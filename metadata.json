@@ -1,0 +1,6 @@
+{
+  "name": "StreamVault Player",
+  "description": "Smart local and streaming video player featuring customizable playlists, video streaming, subtitle support, folder viewing, and a private secure vault.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

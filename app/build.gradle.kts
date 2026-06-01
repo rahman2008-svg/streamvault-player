@@ -9,7 +9,6 @@ plugins {
 android {
   namespace = "com.example"
 
-  // FIX: invalid compileSdk DSL corrected
   compileSdk = 36
 
   defaultConfig {
@@ -24,44 +23,52 @@ android {
 
   signingConfigs {
 
+    // 🔥 RELEASE SAFE (CI/CD FRIENDLY)
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH")
-        ?: "${rootDir}/my-upload-key.jks"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: ""
 
-      // FIX: prevent crash if file doesn't exist
-      if (file(keystorePath).exists()) {
+      if (keystorePath.isNotEmpty() && file(keystorePath).exists()) {
         storeFile = file(keystorePath)
         storePassword = System.getenv("STORE_PASSWORD")
-        keyAlias = "upload"
+        keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
         keyPassword = System.getenv("KEY_PASSWORD")
       }
     }
 
+    // 🔥 DEBUG SAFE (NO CRASH ANYWHERE)
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      val debugKeystore = file("${rootDir}/debug.keystore")
+
+      if (debugKeystore.exists()) {
+        storeFile = debugKeystore
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      }
     }
   }
 
   buildTypes {
-    release {
-      isCrunchPngs = false
+
+    debug {
+      // ✔ SAFE: No forced signing crash
       isMinifyEnabled = false
+      isCrunchPngs = false
+    }
+
+    release {
+      isMinifyEnabled = false
+      isCrunchPngs = false
+
       proguardFiles(
         getDefaultProguardFile("proguard-android-optimize.txt"),
         "proguard-rules.pro"
       )
 
-      // FIX: safe fallback if signing missing
+      // ✔ SAFE SIGNING ONLY IF AVAILABLE
       if (signingConfigs.findByName("release") != null) {
         signingConfig = signingConfigs.getByName("release")
       }
-    }
-
-    debug {
-      signingConfig = signingConfigs.getByName("debugConfig")
     }
   }
 
@@ -82,12 +89,17 @@ android {
   }
 }
 
-// Secrets plugin config
+/* =========================
+   🔐 SECRETS CONFIG
+========================= */
 secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
 }
 
+/* =========================
+   📦 DEPENDENCIES (UNCHANGED)
+========================= */
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))

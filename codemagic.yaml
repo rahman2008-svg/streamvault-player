@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: Android Apps Build Pipeline
+    name: StreamVault Android Build Pipeline
     max_build_duration: 60
     instance_type: mac_mini_m1
 
@@ -9,6 +9,7 @@ workflows:
 
       vars:
         PACKAGE_NAME: "com.aistudio.streamvault.player.kvprqx"
+        GRADLE_OPTS: "-Xmx4096m"
 
     triggering:
       events:
@@ -19,17 +20,29 @@ workflows:
           include: true
 
     scripts:
+      - name: Checkout cleanup
+        script: |
+          echo "Preparing build..."
+
       - name: Set up local properties
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Grant permissions
+      - name: Grant Gradle permissions
         script: |
           chmod +x gradlew
 
-      - name: Validate Gradle wrapper
+      - name: Clean project
+        script: |
+          ./gradlew clean
+
+      - name: Run build check
         script: |
           ./gradlew tasks
+
+      - name: Build Debug APK (SAFE)
+        script: |
+          ./gradlew assembleDebug
 
       - name: Build Release APK & AAB
         script: |

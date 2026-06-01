@@ -1,6 +1,6 @@
 workflows:
   android-workflow:
-    name: StreamVault CI/CD Pipeline
+    name: StreamVault Stable Build Pipeline
     max_build_duration: 60
     instance_type: mac_mini_m1
 
@@ -20,15 +20,16 @@ workflows:
           include: true
 
     scripts:
-      - name: Checkout info
+
+      - name: Start build log
         script: |
-          echo "Starting StreamVault build..."
+          echo "🚀 StreamVault build starting..."
 
       - name: Setup local properties
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
-      - name: Make Gradle executable
+      - name: Grant permissions
         script: |
           chmod +x gradlew
 
@@ -44,7 +45,7 @@ workflows:
         script: |
           ./gradlew assembleDebug
 
-      - name: Build Release APK (NO SIGN CRASH SAFE)
+      - name: Build Release APK (SAFE SIGNING)
         script: |
           ./gradlew assembleRelease
 
